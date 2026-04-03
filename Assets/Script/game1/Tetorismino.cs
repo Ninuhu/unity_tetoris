@@ -18,7 +18,7 @@ public class Tetorismino : MonoBehaviour
     public GameObject ghostPrefab;  // ゴーストテト
     private GameObject ghostInstance;
 
-    public AudioClip lockSound;  // 固定時に効果音
+    public AudioClip lockSound;  // 固定時の効果音データ
     private AudioSource audioSource;
 
 
@@ -31,16 +31,21 @@ public class Tetorismino : MonoBehaviour
         {
             Move(Vector2.down);
             timer = 0;
+        
         }
+
+
         if (ghostInstance == null) CreateGhost(); //生成（複数出ないように）
 
         HandleInput();
         UpdateGhost();
     }
+    private HoldManager holdManager; //FindObjectOfType<HoldManager>();これ探す用
     void Start()
     {
         defaultFallTime = fallTime;
         audioSource = GetComponent<AudioSource>(); //参照　おとを
+        holdManager = FindObjectOfType<HoldManager>();
     }
 
 
@@ -73,15 +78,17 @@ public class Tetorismino : MonoBehaviour
         // Hold   LeftShift
         if(Input.GetKeyDown(KeyCode.LeftShift))
         {
+            if(!GameSettings.holdEnabled) return; //pause時のsetting→hold on/offでつかう
             Debug.Log(" hold 押された");
-            FindObjectOfType<HoldManager>().Hold(this);
+            holdManager.Hold(this);
         }
 
         //  ホールドを使う（今のミノを破棄して置換） RightShift
         if (Input.GetKeyDown(KeyCode.RightShift))
         {
+            if(!GameSettings.holdEnabled) return; //pause時のsetting→hold on/offでつかう
             Debug.Log(" 置換押された");
-            FindObjectOfType<HoldManager>().UseHold(this);
+            holdManager.UseHold(this);
         }
 
         //　回転  ↑
@@ -111,7 +118,7 @@ public class Tetorismino : MonoBehaviour
         }
     }
 
-
+    //ミノ固定
     void LockMino()
     {
         if(isHolding) return; //hold中は固定しない
@@ -141,7 +148,7 @@ public class Tetorismino : MonoBehaviour
         if(!IsValid()) transform.Rotate(0,0,-90);
     }
 
-
+    //　判定bool関数
 
     bool IsValid()
     {
@@ -179,8 +186,7 @@ public class Tetorismino : MonoBehaviour
             }
 
 
-            if(x <0 || x >= GameManager.width || y <0 || y >= GameManager.height)
-            return; //配列外のアクセスなしに
+            if(x <0 || x >= GameManager.width || y <0 || y >= GameManager.height) return; //配列外のアクセスなしに
             // 上に突き抜けてたらGameOver
             
             
